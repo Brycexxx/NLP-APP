@@ -18,6 +18,8 @@ ext = Extractor(cws_model_path, pos_model_path, ner_model_path, parser_model_pat
 with open(r'C:\Users\xxx\Desktop\NLP\project-01\Automatic-Extract-Speech\backend\models\say.pickle', 'rb') as f:
     says = pickle.load(f)
 
+says.append('抱怨')
+
 app = Flask(__name__,
             static_folder = "../dist/static",
             template_folder = "../dist")
@@ -29,23 +31,20 @@ cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 def catch_all(path):
     return render_template("index.html")
 
-@app.route('/api/random')
-def random_number():
-    response = {
-        'randomNumber': randint(1, 100)
-    }
-    return jsonify(response)
-
 @app.route('/api/extract')
 def extract():
     sentence = request.args.get('sentence', '', type=str)
-    who, speech = ext.extract_by_labeller(sentence, says)
+    persons, predicates, speeches = ext.extract_speech_list(sentence, says)
     response = {
-        'who': who,
-        'speech': speech
+        'persons': persons,
+        'predicates': predicates,
+        'speeches': speeches
     }
     return jsonify(response)
 
 
 if __name__ == '__main__':
     app.run(debug=True)
+    # sentence = '“我们养活了美国，但这届政府对待小规模农民很糟糕”，小明抱怨。小刚称，当前韩国海军陆战队拥有2个师和2个旅。'
+    # who, verbs, speech = ext.extract_speech_list(sentence, says)
+    # print(speech)
