@@ -24,7 +24,14 @@
             <br />
           </div>
           <a-row style="background: #fff" v-if="show">
-            <a-col :span="12">
+            <a-table
+                :columns="columns"
+                :dataSource="data"
+                :pagination="{ pageSize: 3 }"
+                :scroll="{ y: 240 }"
+                style="background: #fff"
+              />
+            <!-- <a-col :span="12">
               <a-table
                 :columns="columns"
                 :dataSource="data"
@@ -35,7 +42,7 @@
             </a-col>
             <a-col :span="12">
               <svg></svg>
-            </a-col>
+            </a-col> -->
           </a-row>
         </a-layout-content>
         <a-layout-sider theme="light"></a-layout-sider>
@@ -51,24 +58,39 @@ const columns = [
   {
     title: '人物',
     dataIndex: 'person',
-    width: 50
+    width: 50,
+    align: 'center'
   },
   {
     title: '谓词',
     dataIndex: 'predicate',
-    width: 50
+    width: 50,
+    align: 'center'
   },
   {
     title: '言论',
     dataIndex: 'speech',
-    width: 150
+    width: 150,
+    align: 'center'
+  },
+  {
+    title: '情感分数',
+    dataIndex: 'score',
+    width: 50,
+    align: 'center'
+  },
+  {
+    title: '情感分类',
+    dataIndex: 'sentiment',
+    width: 50,
+    align: 'center'
   }
 ]
 export default {
   data () {
     let data = []
     let sentence = ''
-    let show = true
+    let show = false
     return {
       columns,
       data,
@@ -102,13 +124,17 @@ export default {
           let predicates = resp.predicates
           let persons = resp.persons
           let speeches = resp.speeches
+          let scores = resp.scores
+          let sentiments = resp.sentiments
           let tmp = []
           for (let i = 0; i < persons.length; i++) {
             tmp.push({
               key: i,
               person: persons[i],
               predicate: predicates[i],
-              speech: speeches[i]
+              speech: speeches[i],
+              score: scores[i],
+              sentiment: sentiments[i]
             })
           }
           this.data = tmp
@@ -120,103 +146,115 @@ export default {
     drawRelationShip () {
       this.test()
     },
-    test () {}
+    test () {
+      var svg = d3.select('svg')
+      var width = 960
+      var height = 600
+
+      var color = d3.scaleOrdinal(d3.schemeCategory20)
+
+      var simulation = d3
+        .forceSimulation()
+        .force(
+          'link',
+          d3.forceLink().id(function (d) {
+            return d.id
+          })
+        )
+        .force('charge', d3.forceManyBody())
+        .force('center', d3.forceCenter(width / 2, height / 2))
+
+      d3.json('http://127.0.0.1:5000/api/draw', function (error, graph) {
+        if (error) throw error
+
+        var link = svg
+          .append('g')
+          .attr('class', 'links')
+          .selectAll('line')
+          .data(graph.links)
+          .enter()
+          .append('line')
+          .attr('stroke-width', function (d) {
+            return Math.sqrt(d.value)
+          })
+
+        var node = svg
+          .append('g')
+          .attr('class', 'nodes')
+          .selectAll('circle')
+          .data(graph.nodes)
+          .enter()
+          .append('circle')
+          .attr('r', 5)
+          .attr('fill', function (d) {
+            return color(d.group)
+          })
+          .call(
+            d3
+              .drag()
+              .on('start', function (d) {
+                if (!d3.event.active) simulation.alphaTarget(0.3).restart()
+                d.fx = d.x
+                d.fy = d.y
+              })
+              .on('drag', function (d) {
+                d.fx = d3.event.x
+                d.fy = d3.event.y
+              })
+              .on('end', function (d) {
+                if (!d3.event.active) simulation.alphaTarget(0)
+                d.fx = null
+                d.fy = null
+              })
+          )
+
+        node.append('title').text(function (d) {
+          return d.id
+        })
+
+        simulation.nodes(graph.nodes).on('tick', ticked)
+
+        simulation.force('link').links(graph.links)
+
+        function ticked () {
+          link
+            .attr('x1', function (d) {
+              return d.source.x
+            })
+            .attr('y1', function (d) {
+              return d.source.y
+            })
+            .attr('x2', function (d) {
+              return d.target.x
+            })
+            .attr('y2', function (d) {
+              return d.target.y
+            })
+
+          node
+            .attr('cx', function (d) {
+              return d.x
+            })
+            .attr('cy', function (d) {
+              return d.y
+            })
+        }
+      })
+      // function dragstarted (d) {
+      //   if (!d3.event.active) simulation.alphaTarget(0.3).restart()
+      //   d.fx = d.x
+      //   d.fy = d.y
+      // }
+      // function dragged (d) {
+      //   d.fx = d3.event.x
+      //   d.fy = d3.event.y
+      // }
+      // function dragended (d) {
+      //   if (!d3.event.active) simulation.alphaTarget(0)
+      //   d.fx = null
+      //   d.fy = null
+      // }
+    }
   }
-}
-var svg = d3.select('svg')
-var width = 960
-var height = 600
-
-var color = d3.scaleOrdinal(d3.schemeCategory20)
-
-var simulation = d3
-  .forceSimulation()
-  .force(
-    'link',
-    d3.forceLink().id(function (d) {
-      return d.id
-    })
-  )
-  .force('charge', d3.forceManyBody())
-  .force('center', d3.forceCenter(width / 2, height / 2))
-
-d3.json('http://127.0.0.1:5000/api/draw', function (error, graph) {
-  if (error) throw error
-
-  var link = svg
-    .append('g')
-    .attr('class', 'links')
-    .selectAll('line')
-    .data(graph.links)
-    .enter()
-    .append('line')
-    .attr('stroke-width', function (d) {
-      return Math.sqrt(d.value)
-    })
-
-  var node = svg
-    .append('g')
-    .attr('class', 'nodes')
-    .selectAll('circle')
-    .data(graph.nodes)
-    .enter()
-    .append('circle')
-    .attr('r', 5)
-    .attr('fill', function (d) {
-      return color(d.group)
-    })
-    .call(
-      d3
-        .drag()
-        .on('start', dragstarted)
-        .on('drag', dragged)
-        .on('end', dragended)
-    )
-
-  node.append('title').text(function (d) {
-    return d.id
-  })
-
-  simulation.nodes(graph.nodes).on('tick', ticked)
-
-  simulation.force('link').links(graph.links)
-
-  function ticked () {
-    link
-      .attr('x1', function (d) {
-        return d.source.x
-      })
-      .attr('y1', function (d) {
-        return d.source.y
-      })
-      .attr('x2', function (d) {
-        return d.target.x
-      })
-      .attr('y2', function (d) {
-        return d.target.y
-      })
-
-    node
-      .attr('cx', function (d) {
-        return d.x
-      })
-      .attr('cy', function (d) {
-        return d.y
-      })
-  }
-})
-function dragstarted (d) {
-  if (!d3.event.active) simulation.alphaTarget(0.3).restart()
-  d.fx = d.x
-  d.fy = d.y
-}
-function dragged (d) {
-  d.fx = d3.event.x
-  d.fy = d3.event.y
-}
-function dragended (d) {
-  if (!d3.event.active) simulation.alphaTarget(0)
-  d.fx = null
-  d.fy = null
 }
 </script>

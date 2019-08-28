@@ -1,9 +1,10 @@
 from flask import Flask, render_template, jsonify, request
 from flask_cors import CORS
 from random import randint
-import pickle
+import pickle, json
 from pathlib import Path
 from extractor import Extractor
+from snownlp import SnowNLP
 
 
 LTP_DATA_DIR = Path('C:\\Users\\xxx\\Desktop\\NLP\\project-01\\Automatic-Extract-Speech\\backend\\models\\ltp_data') 
@@ -35,16 +36,23 @@ def catch_all(path):
 def extract():
     sentence = request.args.get('sentence', '', type=str)
     persons, predicates, speeches = ext.extract_speech_list(sentence, says)
+    scores = [round(SnowNLP(speech).sentiments, 2) for speech in speeches]
+    sentiments = ['正' if score > 0.5 else '负' for score in scores]
     response = {
         'persons': persons,
         'predicates': predicates,
-        'speeches': speeches
+        'speeches': speeches,
+        'scores': scores,
+        'sentiments': sentiments
     }
     return jsonify(response)
+
+@app.route('/api/draw')
+def draw():
+    with open('test.json', 'r') as f:
+        resp = json.load(f)
+    return jsonify(resp)
 
 
 if __name__ == '__main__':
     app.run(debug=True)
-    # sentence = '“我们养活了美国，但这届政府对待小规模农民很糟糕”，小明抱怨。小刚称，当前韩国海军陆战队拥有2个师和2个旅。'
-    # who, verbs, speech = ext.extract_speech_list(sentence, says)
-    # print(speech)
