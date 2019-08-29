@@ -7,16 +7,17 @@ from extractor import Extractor
 from snownlp import SnowNLP
 
 
-LTP_DATA_DIR = Path('C:\\Users\\xxx\\Desktop\\NLP\\project-01\\Automatic-Extract-Speech\\backend\\models\\ltp_data') 
+LTP_DATA_DIR = Path('./models/ltp_data') 
 cws_model_path = LTP_DATA_DIR / 'cws.model'
 pos_model_path = LTP_DATA_DIR / 'pos.model' 
 ner_model_path = LTP_DATA_DIR / 'ner.model' 
 parser_model_path = LTP_DATA_DIR / 'parser.model'
 srl_model_path = LTP_DATA_DIR / 'pisrl_win.model'
+word_vec_path = Path('./models/word2vec/word_vecs.model')
 
-ext = Extractor(cws_model_path, pos_model_path, ner_model_path, parser_model_path, srl_model_path)
+ext = Extractor(cws_model_path, pos_model_path, ner_model_path, parser_model_path, srl_model_path, word_vec_path)
 
-with open(r'C:\Users\xxx\Desktop\NLP\project-01\Automatic-Extract-Speech\backend\models\say.pickle', 'rb') as f:
+with open(r'./models/say.pickle', 'rb') as f:
     says = pickle.load(f)
 
 says.append('抱怨')
