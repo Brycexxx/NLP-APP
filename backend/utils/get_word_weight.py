@@ -30,5 +30,35 @@ def get_weight_and_word_vec_file():
 
 
 if __name__ == "__main__":
-    get_weight_and_word_vec_file()
-     
+    # get_weight_and_word_vec_file()
+    import jieba
+    import numpy as np
+    from sklearn.metrics.pairwise import cosine_similarity
+    from sklearn.decomposition import TruncatedSVD
+    p = params()
+    model = Word2Vec.load(str(p.word2vec_path))
+    a = '你好美丽'
+    b = '你好漂亮'
+    a_cut = list(jieba.cut(a))
+    b_cut = list(jieba.cut(b))
+    a_weight = np.array([3.1264584255315635e-06, 5.309067952431014e-05])
+    b_weight = np.array([3.1264584255315635e-06, 1.0607626800910661e-05])
+    a_embedding = np.zeros((1, 300))
+    b_embedding = np.zeros((1, 300))
+    for i, word in enumerate(a_cut):
+        if word in model.wv:
+            a_embedding += model.wv[word] * a_weight[i]
+    for i, word in enumerate(b_cut):
+        if word in model.wv:
+            b_embedding += model.wv[word] * b_weight[i]
+    print(cosine_similarity(a_embedding.reshape(1, -1), b_embedding.reshape(1, -1)))
+    # a_embedding /= 2
+    # b_embedding /= 2
+    # sentences = np.concatenate([a_embedding, b_embedding], axis=0)
+    # svd = TruncatedSVD(1, random_state=1)
+    # x = svd.fit(sentences)
+    # v = svd.components_.reshape(-1, 1)
+    # sentences -= sentences @ (v@v.T)
+    # print(cosine_similarity(sentences[0].reshape(1, -1), sentences[1].reshape(1, -1)))
+
+

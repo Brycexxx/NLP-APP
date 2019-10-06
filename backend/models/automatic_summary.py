@@ -97,21 +97,21 @@ class TextRankSummary:
         reductive_word_order = sorted(selected)
         return ''.join(sentences[i] for i, _ in reductive_word_order)
 
-
 if __name__ == '__main__':
-    import json
-
-    current = Path.cwd()
+    # import json
+    #
+    # current = Path.cwd()
     summary = TextRankSummary()
-    with open(current.parent / 'data/nlpcc2017textsummarization/train_with_summ.txt',
-              encoding='utf8') as f:
-        examples = [json.loads(line[:-1]) for line in f.readlines()]
-
-
-    def cut(sent): return [word for word in jieba.cut(sent)]
-
-
-    corpus = [item['article'] for item in examples]
-    example = corpus[0].replace('<Paragraph>', '')
-    summ = summary.summary(example, 2, algorithm='Cosine')
+    # with open(current.parent / 'data/nlpcc2017textsummarization/train_with_summ.txt',
+    #           encoding='utf8') as f:
+    #     examples = [json.loads(line[:-1]) for line in f.readlines()]
+    #
+    #
+    # def cut(sent): return [word for word in jieba.cut(sent)]
+    #
+    #
+    # corpus = [item['article'] for item in examples]
+    # example = corpus[0].replace('<Paragraph>', '')
+    example = '你好漂亮。你好美丽。你怎么这样'
+    summ = summary.summary(example, 2)
     print(summ)
