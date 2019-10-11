@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.decomposition import TruncatedSVD
 
+# reference: https://github.com/PrincetonML/SIF
 
 def get_weighted_average(We, x, w):
     """

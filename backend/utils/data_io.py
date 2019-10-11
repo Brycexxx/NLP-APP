@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 from .tree import tree
 
-
+# reference: https://github.com/PrincetonML/SIF
 # from theano import config
 
 def getWordmap(textfile):
@@ -158,7 +158,7 @@ def getDataSim(batch, nout):
 
 
 def getDataEntailment(batch):
-    g1 = [];
+    g1 = []
     g2 = []
     for i in batch:
         g1.append(i[0].embeddings)

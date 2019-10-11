@@ -1,5 +1,7 @@
 from pathlib import Path
 
+# reference: https://github.com/PrincetonML/SIF
+
 class params(object):
     
     def __init__(self):

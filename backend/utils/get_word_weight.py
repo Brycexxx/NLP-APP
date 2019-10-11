@@ -52,13 +52,13 @@ if __name__ == "__main__":
         if word in model.wv:
             b_embedding += model.wv[word] * b_weight[i]
     print(cosine_similarity(a_embedding.reshape(1, -1), b_embedding.reshape(1, -1)))
-    # a_embedding /= 2
-    # b_embedding /= 2
-    # sentences = np.concatenate([a_embedding, b_embedding], axis=0)
-    # svd = TruncatedSVD(1, random_state=1)
-    # x = svd.fit(sentences)
-    # v = svd.components_.reshape(-1, 1)
-    # sentences -= sentences @ (v@v.T)
-    # print(cosine_similarity(sentences[0].reshape(1, -1), sentences[1].reshape(1, -1)))
+    a_embedding /= 2
+    b_embedding /= 2
+    sentences = np.concatenate([a_embedding, b_embedding], axis=0)
+    svd = TruncatedSVD(1, random_state=1)
+    x = svd.fit(sentences)
+    v = svd.components_.reshape(-1, 1)
+    sentences = sentences @ (v@v.T)
+    print(cosine_similarity(sentences[0].reshape(1, -1), sentences[1].reshape(1, -1)))
 
 

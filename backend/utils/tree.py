@@ -1,5 +1,7 @@
 from . import data_io
 
+# reference: https://github.com/PrincetonML/SIF
+
 class tree(object):
 
     def __init__(self, phrase, words):

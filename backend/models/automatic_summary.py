@@ -9,11 +9,15 @@ from pathlib import Path
 from typing import List, Tuple, Dict
 import re
 import warnings
+import logging
 
 warnings.filterwarnings('ignore')
 
 plt.rcParams['font.sans-serif'] = ['SimHei']
 plt.rcParams['axes.unicode_minus'] = False
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class TextRankSummary:
@@ -43,6 +47,29 @@ class TextRankSummary:
         embedding = SIF_embedding.SIF_embedding(self.vectors, x, w, self.params)
         return sentences, embedding, top_k
 
+    def _page_rank(self, matrix: np.ndarray, tol: float = 1e-3, d: float = 0.85,
+                   max_iter: int = 100, verbose: bool = False) -> Dict[int, float]:
+        """init a score vector, use it to do matrix multiplication with recommendation matrix
+        matrix: recommendation matrix, matrix[i, j] is the cosine similarity between sentence i and sentence j
+        tol: tolerance for stopping criteria
+        d: damping factor that can be set between 0 and 1
+        max_iter: maximum number of iterations taken for the solvers to converge
+        verbose: print information of solver
+        return scores: the score of each sentence
+        """
+        num_sentences = matrix.shape[0]
+        scores = np.ones(num_sentences) / num_sentences
+        l2_norm = 1
+        it = 1
+        while l2_norm > tol and it < max_iter:
+            tmp = scores
+            scores = (1 - d) + d * scores @ (matrix / matrix.sum(axis=1, keepdims=True))
+            scores /= scores.sum()
+            l2_norm = np.linalg.norm(scores - tmp) / num_sentences
+            if verbose: logger.info(f'iter {it} times, l2_norm is {l2_norm}, tol is {tol}')
+            it += 1
+        return {i: score for i, score in enumerate(scores.squeeze())}
+
     def _text_rank(self, text: str, top_k: int) -> Tuple[Dict[int, float], List[str]]:
         """use TextRank to get scores of scores
         return
@@ -58,10 +85,12 @@ class TextRankSummary:
             for j in range(i + 1, num_sentences):
                 similarity_matrix[i, j] = cosine_similarity(sentences_embedding[i, None], sentences_embedding[j, None])
                 similarity_matrix[j, i] = similarity_matrix[i, j]
-        graph = nx.from_numpy_array(similarity_matrix)
+        similarity_matrix /= (similarity_matrix.sum(axis=1, keepdims=True) + 1e-6)
+        # graph = nx.from_numpy_array(similarity_matrix)
         # nx.draw_networkx(graph)
         # plt.show()
-        scores = nx.pagerank(graph, max_iter=5000)
+        # scores = nx.pagerank(graph, max_iter=5000)
+        scores = self._page_rank(similarity_matrix)
         return scores, sentences
 
     def _summary_by_similarity(self, text: str, top_k: int) -> Tuple[Dict[int, float], List[str]]:
@@ -97,21 +126,24 @@ class TextRankSummary:
         reductive_word_order = sorted(selected)
         return ''.join(sentences[i] for i, _ in reductive_word_order)
 
+
 if __name__ == '__main__':
-    # import json
-    #
-    # current = Path.cwd()
+    import json
+
+    current = Path.cwd()
     summary = TextRankSummary()
-    # with open(current.parent / 'data/nlpcc2017textsummarization/train_with_summ.txt',
-    #           encoding='utf8') as f:
-    #     examples = [json.loads(line[:-1]) for line in f.readlines()]
-    #
-    #
-    # def cut(sent): return [word for word in jieba.cut(sent)]
-    #
-    #
-    # corpus = [item['article'] for item in examples]
-    # example = corpus[0].replace('<Paragraph>', '')
-    example = '你好漂亮。你好美丽。你怎么这样'
-    summ = summary.summary(example, 2)
-    print(summ)
+    with open(current.parent / 'data/nlpcc2017textsummarization/train_with_summ.txt',
+              encoding='utf8') as f:
+        examples = [json.loads(line[:-1]) for line in f.readlines()]
+
+
+    def cut(sent): return [word for word in jieba.cut(sent)]
+
+
+    corpus = [item['article'] for item in examples]
+    example = corpus[1].replace('<Paragraph>', '')
+    print(example)
+    # example = '你好漂亮。你好美丽。你怎么这样'
+    # summ = summary.summary(example, 2)
+    # print(summ)
+    print(summary.summary(example))
