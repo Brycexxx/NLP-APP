@@ -340,8 +340,8 @@ def getIDFWeight(wordfile, save_file=''):
         seq2 = []
         for i in lines:
             i = i.split("\t")
-            p1 = i[0];
-            p2 = i[1];
+            p1 = i[0]
+            p2 = i[1]
             score = float(i[2])
             X1, X2 = getSeqs(p1, p2, words)
             seq1.append(X1)
