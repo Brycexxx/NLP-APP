@@ -12,6 +12,11 @@ class params(object):
         self.rmpc = 1
         self.word2vec_path = Path.cwd().parent / 'data/zhwiki_word2vec/word2vec.model'
         self.stop_words_path = Path.cwd().parent / 'data/stop_words.txt'
+        self.qa_path = Path.cwd().parent / 'data/qa_corpus.csv'
+        self.tfidf = Path.cwd().parent / 'data/tfidf_model.pickle'
+        self.business_ans = Path.cwd().parent / 'data/business_ans.txt'
+        self.business_binary_vec = Path.cwd().parent / 'data/business_binary_vec.pickle'
+        self.kmeans = Path.cwd().parent / 'data/kmeans.pickle'
 
     def __str__(self):
         t = "LW", self.LW, ", LC", self.LC, ", eta", self.eta
